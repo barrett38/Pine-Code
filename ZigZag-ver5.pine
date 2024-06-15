@@ -1,0 +1,85 @@
+//@version=5
+indicator("ZigZag+", "ZigZag+ v5", true, format=format.price, max_labels_count=51, max_lines_count=50)
+
+/////////////////////
+/// CONSTANTS //////
+///////////////////
+
+Depth       = input.int(12, "Depth", minval=1, step=1)
+Deviation   = input.int(5, "Deviation", minval=1, step=1)
+Backstep    = input.int(2, "Backstep", minval=2, step=1)
+line_thick  = input.int(2, "Line Thickness", minval=1, maxval=4)
+upcolor     = input.color(#26A69A, "Bull Color")
+dncolor     = input.color(#EF5350, "Bear Color")
+repaint     = input.bool(true, "Repaint Levels")
+ 
+///////////////////////////////
+/// PUTTING IT TOGETHER //////
+/////////////////////////////
+
+var int last_h = 1
+last_h := last_h + 1
+var int last_l = 1
+last_l := last_l + 1
+var int lw = 1
+var int hg = 1
+lw := lw + 1
+hg := hg + 1
+p_lw = -ta.lowestbars(Depth)
+p_hg = -ta.highestbars(Depth)
+lowing = lw == p_lw or low - low[p_lw] > Deviation * syminfo.mintick
+highing = hg == p_hg or high[p_hg] - high > Deviation * syminfo.mintick
+lh = ta.barssince(not highing[1])
+ll = ta.barssince(not lowing[1])
+down = ta.barssince(not (lh > ll)) >= Backstep
+lower = low[lw] > low[p_lw]
+higher = high[hg] < high[p_hg]
+
+if lw != p_lw and (not down[1] or lower)
+    lw := p_lw < hg ? p_lw : 0
+if hg != p_hg and (down[1] or higher)
+    hg := p_hg < lw ? p_hg : 0
+
+var line zz = na
+var label point = na
+x1 = down ? lw : hg
+y1 = down ? low[lw] : high[hg]
+
+var bool last_label_up = na
+var bool last_label_down = na
+
+if down == down[1]
+    if repaint
+        label.delete(point[1])
+        line.delete(zz[1])
+    down
+if down != down[1]
+    if down
+        last_h := hg
+    else
+        last_l := lw
+    if not repaint
+        nx = down ? last_h : last_l
+        zz := line.new(x1=bar_index-nx, y1=down ? high[nx] : low[nx], x2=bar_index-(down ? last_l : last_h), y2=down ? low[last_l] : high[last_h], width=line_thick, color=down ? upcolor : dncolor)
+        point := label.new(x=bar_index-nx, y=down ? high[nx] : low[nx], text=down ? (high[nx] > high[last_h[1]] ? "HH" : "LH") : (low[nx] < low[last_l[1]] ? "LL" : "HL"), style=down ? label.style_label_down : label.style_label_up, size=size.tiny, color=down ? dncolor : upcolor, textcolor=color.black, tooltip=down ? (high[nx] > high[last_h[1]] ? "Higher High" : "Lower High") : (low[nx] < low[last_l[1]] ? "Lower Low" : "Higher Low"))
+        last_label_up := not down
+        last_label_down := down
+    down
+if repaint
+    zz := line.new(x1=bar_index-(down ? last_h : last_l), y1=down ? high[last_h] : low[last_l], x2=bar_index-x1, y2=y1, width=line_thick, color=down ? dncolor : upcolor)
+    point := label.new(x=bar_index-x1, y=y1, text=down ? (low[x1] < low[last_l] ? "LL" : "HL") : (high[x1] > high[last_h] ? "HH" : "LH"), style=down ? label.style_label_up : label.style_label_down, size=size.tiny, color=down ? upcolor : dncolor, textcolor=color.black, tooltip=down ? (low[x1] < low[last_l] ? "Lower Low" : "Higher Low") : (high[x1] > high[last_h] ? "Higher High" : "Lower High"))
+    last_label_up := down
+    last_label_down := not down
+
+bear = down
+
+////////////////////////////
+/// ALERT CONDITIONS //////
+//////////////////////////
+
+green = not na(point) and last_label_up
+red = not na(point) and last_label_down
+
+green_signal = green[0] and not green[1]
+red_signal = red[0] and not red[1]
+alertcondition(green_signal or red_signal, title="ZigZag Change", message="Zigzag on {{ticker}} formed a Trend Change at {{time}}")
