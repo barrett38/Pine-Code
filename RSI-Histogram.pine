@@ -1,0 +1,22 @@
+//@version=5
+indicator(title="RSI Area", shorttitle="RSI Area", format=format.price, precision=2, timeframe="", timeframe_gaps=true)
+
+rsiLength = input.int(14, minval=1, title="RSI Length")
+source = input.source(close, "Source")
+
+up = ta.rma(math.max(ta.change(source), 0), rsiLength)
+down = ta.rma(-math.min(ta.change(source), 0), rsiLength)
+rsi = down == 0 ? 100 : up == 0 ? 0 : 100 - (100 / (1 + up / down))
+
+// Define colors based on RSI value
+Levels_Transp = 0
+rsiColor = rsi < 30 ? color.new(color.green, Levels_Transp) : rsi > 70 ? color.new(color.red, Levels_Transp) : color.new(color.gray, Levels_Transp)
+
+// Plot the RSI as columns
+plot(rsi, title="RSI", style=plot.style_columns, color=rsiColor)
+
+// Add the level lines for reference
+hline(30, "Level 30", color=color.new(color.gray, 50))
+hline(70, "Level 70", color=color.new(color.gray, 50))
+hline(0, "Level 0", color=color.new(color.gray, 50))
+hline(100, "Level 100", color=color.new(color.gray, 50))
