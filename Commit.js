@@ -20,7 +20,7 @@ async function checkCommit(fileName) {
 (async () => {
   for (let i = 0; i <= maxCommit; i++) {
     const fileName = `./TXT-Files/file${i}.txt`;
-    const txtOfFile = `Adding Notes.`;
+    const txtOfFile = `This is file number ${i} created at ${date}`;
 
     fs.writeFileSync(fileName, `${txtOfFile}`);
 
