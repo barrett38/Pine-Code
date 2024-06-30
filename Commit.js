@@ -35,3 +35,5 @@ async function checkCommit(fileName) {
   // Push all the files to remote repository
   await git.push("origin", "main");
 })();
+
+// testing commit
