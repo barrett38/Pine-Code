@@ -2,8 +2,8 @@ const fs = require("fs");
 const simpleGit = require("simple-git");
 const git = simpleGit();
 
-const min = 7;
-const max = 8;
+const min = 2;
+const max = 3;
 const date = new Date();
 const maxCommit = Math.floor(Math.random() * (max - min + 1)) + min;
 
