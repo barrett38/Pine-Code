@@ -1,11 +1,9 @@
 const fs = require("fs");
 const simpleGit = require("simple-git");
 const git = simpleGit();
+const readline = require("readline");
 
-const min = 7;
-const max = 8;
 const date = new Date();
-const maxCommit = Math.floor(Math.random() * (max - min + 1)) + min;
 
 async function checkCommit(fileName) {
   try {
@@ -17,8 +15,25 @@ async function checkCommit(fileName) {
   }
 }
 
+function askQuestion(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) =>
+    rl.question(query, (ans) => {
+      rl.close();
+      resolve(ans);
+    })
+  );
+}
+
 (async () => {
-  for (let i = 0; i <= maxCommit; i++) {
+  const numCommits = await askQuestion("Enter the number of commits: ");
+  const maxCommit = parseInt(numCommits, 10);
+
+  for (let i = 0; i < maxCommit; i++) {
     const fileName = `./TXT-Files/file${i}.txt`;
     const txtOfFile = `This is file number ${i} created at ${date}`;
 
@@ -35,5 +50,3 @@ async function checkCommit(fileName) {
   // Push all the files to remote repository
   await git.push("origin", "main");
 })();
-
-// testing commit
