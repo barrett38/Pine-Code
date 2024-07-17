@@ -1,0 +1,37 @@
+name: Daily Commit
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # This cron expression schedules the job to run every day at 2 AM UTC
+  push:
+    branches:
+      - main
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14" # Specify the Node.js version
+
+      - name: Install dependencies
+        run: npm install simple-git
+
+      - name: Run commit script
+        run: node commit-script.js
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Automated commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
